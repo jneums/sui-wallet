@@ -71,7 +71,7 @@ module {
     let derivation_path = getDerivationPath(config, caller);
 
     try {
-      let response = await (with cycles = 10_000_000_000) ic.sign_with_ecdsa({
+      let response = await (with cycles = 50_000_000_000) ic.sign_with_ecdsa({
         message_hash = messageHash;
         derivation_path = derivation_path;
         key_id = { curve = #secp256k1; name = config.keyName };

@@ -1,0 +1,8 @@
+{
+  "servers": {
+    "SUIWallet": {
+      "type": "http",
+      "url": "https://j5twa-baaaa-aaaai-q34pq-cai.icp0.io/mcp"
+    }
+  }
+}

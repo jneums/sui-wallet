@@ -5,9 +5,9 @@ namespace: io.github.jneums.sui-wallet
 # This section contains all data for a specific version. This entire package will be submitted for review and locked to the audit of this version.
 # deployment_type: 'global' (shared infrastructure, recommended) or 'provisioned' (dedicated resources)
 submission:
-  name: SUI Wallet for AI Agents
+  name: SUI Wallet
   description: Multi-tenant, non-custodial SUI wallet on Internet Computer. Each principal gets their own deterministic SUI address via threshold ECDSA. Send & receive SUI with zero custody risk - all signing happens through IC consensus. Production-ready on SUI mainnet!
-  publisher: Jesse Neumann
+  publisher: Atlas Labs
   category: Finance
   deployment_type: global
   repo_url: https://github.com/jneums/sui-wallet
@@ -33,5 +33,5 @@ submission:
     banner_url: https://github.com/jneums/sui-wallet/releases/download/v1.0.0-assets/banner-sui-wallet.webp
     gallery_images:
       - https://github.com/jneums/sui-wallet/releases/download/v1.0.0-assets/banner-sui-wallet.webp
-  git_commit: ''
+  git_commit: 'ddddfc485acb2bd53acf8224484e01c2e5c356f6'
   wasm_path: .dfx/local/canisters/my_mcp_server/my_mcp_server.wasm
