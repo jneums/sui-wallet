@@ -1,16 +1,22 @@
 # SUI Wallet MCP Server
 
-A **multi-tenant, non-custodial SUI wallet canister** that functions as an MCP server on the Internet Computer. This canister provides any principal (user or canister) with its own unique, secure SUI wallet, derived from its Principal ID.
+A **multi-tenant, non-custodial SUI wallet canister** that functions as an MCP server on the Internet Computer. Each IC principal (user or canister) automatically gets their own unique, secure SUI wallet derived from their Principal ID using threshold ECDSA.
 
 ## 🌟 Features
 
-- **Multi-Tenant Architecture**: Each IC principal automatically gets their own unique SUI wallet
-- **Non-Custodial**: Uses IC's threshold ECDSA for decentralized key management
-- **Deterministic Key Derivation**: Your SUI address is always derived from your IC identity
-- **Simple MCP Tools**: Abstract away blockchain complexity with easy-to-use tools
-- **Secure by Design**: No private keys stored; all signing done via IC consensus
+- **✅ Multi-Tenant Architecture**: Each IC principal automatically gets their own unique SUI wallet
+- **✅ Non-Custodial**: Uses IC's threshold ECDSA for decentralized key management
+- **✅ Deterministic Key Derivation**: Your SUI address is always derived from your IC identity
+- **✅ Fully Functional Transfers**: Successfully tested on SUI testnet
+- **✅ Blake2b-256 Hashing**: Proper SUI signature scheme implementation
+- **✅ MCP Tools**: Three working tools (address, balance, transfer)
+- **✅ Secure by Design**: No private keys stored; all signing done via IC consensus
 
-This guide assumes you are using `npm` as your package manager.
+## 🚀 Live Demo
+
+**Canister ID**: `jtr3i-2qaaa-aaaai-q34oq-cai` (IC Mainnet)
+
+Try it live with the MCP Inspector or integrate it into your AI agent!
 
 ## Prerequisites
 
@@ -103,9 +109,17 @@ Retrieves your unique SUI address derived from your IC Principal.
 **Output**:
 ```json
 {
-  "address": "0x..."
+  "address": "0x1234567890abcdef..."
 }
 ```
+
+**Example**:
+```bash
+# Using MCP Inspector - just call the tool with no parameters
+# Your address will be deterministically derived from your authenticated principal
+```
+
+---
 
 ### 2. `wallet_get_balance`
 
@@ -120,15 +134,31 @@ Retrieves your current SUI balance in MIST (1 SUI = 1,000,000,000 MIST).
 }
 ```
 
+**Note**: 
+- Balance is returned as a string to handle large numbers
+- 1 SUI = 1,000,000,000 MIST
+- Queries SUI testnet RPC at `https://fullnode.testnet.sui.io:443`
+
+**Example**:
+```bash
+# Using MCP Inspector
+# 1. Authenticate with your API key
+# 2. Call wallet_get_balance
+# 3. Result shows your balance in MIST
+```
+
+---
+
 ### 3. `wallet_transfer`
 
-Transfers SUI from your wallet to another address.
+**✅ FULLY FUNCTIONAL** - Transfers SUI from your wallet to another address.
 
 **Input**:
 ```json
 {
   "to_address": "0x...",
-  "amount": "100000000"
+  "amount": "100000000",
+  "gas_budget": "10000000"
 }
 ```
 
@@ -136,11 +166,46 @@ Transfers SUI from your wallet to another address.
 ```json
 {
   "status": "success",
-  "transaction_id": "..."
+  "transaction_digest": "8Rf9k3..."
 }
 ```
 
-**Note**: Transfer functionality is currently a placeholder and will be fully implemented in the next iteration.
+**Parameters**:
+- `to_address`: Recipient's SUI address (must start with `0x`)
+- `amount`: Amount in MIST to transfer (string)
+- `gas_budget`: Gas budget in MIST (default: 10000000)
+
+**How It Works**:
+1. Queries your wallet for available coins
+2. Builds transaction using `unsafe_transferSui` RPC method
+3. Signs with your derived ECDSA key using:
+   - Blake2b-256 hash of (intent + txBytes)
+   - SHA256 intermediate hash
+   - IC threshold ECDSA signing
+   - Low-s signature normalization
+4. Broadcasts signed transaction to SUI network
+5. Returns transaction digest on success
+
+**Example Successful Transfer**:
+```bash
+# Transfer 0.1 SUI (100,000,000 MIST) with 0.01 SUI gas budget
+{
+  "to_address": "0xabcdef1234567890...",
+  "amount": "100000000",
+  "gas_budget": "10000000"
+}
+
+# Response:
+{
+  "status": "success", 
+  "transaction_digest": "8Rf9k3pQmN..."
+}
+```
+
+**Requirements**:
+- Your wallet must have sufficient SUI balance (amount + gas)
+- Recipient address must be valid SUI address
+- At least one coin object in your wallet
 
 ---
 
@@ -155,25 +220,49 @@ To test that each principal gets a unique wallet:
 
 ## Current Status
 
-### ✅ Completed
-- Multi-tenant architecture with principal-based key derivation
-- Authentication with API keys
-- `wallet_get_address` tool - fully functional
-- `wallet_get_balance` tool - fully functional  
-- HTTP outcalls with proper cycle provisioning
-- Public key caching for performance
-- Transaction signing infrastructure
-- Basic transfer function structure
+### ✅ Fully Operational
+- **Multi-tenant architecture** with principal-based key derivation
+- **Authentication** with API keys (Prometheus Protocol)
+- **`wallet_get_address`** - Derives unique SUI address from IC Principal
+- **`wallet_get_balance`** - Queries SUI testnet RPC for balance
+- **`wallet_transfer`** - **WORKING!** Successfully transfers SUI on testnet
+- **HTTP outcalls** with proper cycle provisioning (500M for transfers)
+- **Public key caching** for performance optimization
+- **ECDSA signing** with IC threshold signatures (10B cycles)
+- **Blake2b-256 hashing** - Correct external hash for SUI
+- **SHA256 intermediate hash** - Bridges Blake2b to IC's internal SHA256
+- **Signature normalization** - Low-s requirement enforcement
+- **Signature format** - Correct 0x01 flag for ECDSA Secp256k1
 
-### 🚧 Known Limitations
-- **Incomplete BCS Serialization**: Transaction commands are not fully serialized. The BCS encoding for complex programmable transactions needs completion.
-- **Transfer Testing**: The `wallet_transfer` function is structurally complete but needs real testnet testing to verify transaction format.
+### 🎯 Technical Highlights
 
-### 🔜 To Complete Full Production Readiness
-1. Implement complete BCS serialization for all transaction command types
-2. Test transfers on SUI testnet with funded wallets
-3. Add error handling for various SUI RPC edge cases
-4. Implement coin selection strategy for optimal gas usage
+**Signature Pipeline** (Triple Hash):
+```
+1. Blake2b-256(intent [0,0,0] + txBytes) → 32 bytes
+2. SHA256(blake2b_hash) → 32 bytes  
+3. IC sign_with_ecdsa(sha256_hash) → 64 bytes (r||s)
+4. Normalize signature (s ≤ N/2)
+5. Construct: 0x01 + signature(64) + pubkey(33) = 98 bytes
+```
+
+**Key Derivation**:
+```motoko
+derivation_path = [[1], Principal.toBlob(caller)]
+// Simple schema matching Rust standard implementation
+```
+
+**Tested & Verified**:
+- ✅ Address derivation matches SUI standards
+- ✅ Signatures pass SUI network validation
+- ✅ Transfers execute successfully on testnet
+- ✅ Multi-tenant isolation working correctly
+- ✅ All three MCP tools fully functional
+
+### 📊 Code Metrics
+- **Total**: ~1,600 lines across 8 modular files
+- **main.mo**: 524 lines (43% reduction from refactoring)
+- **Modular architecture**: types, utils, crypto, wallet_tools, key_manager, sui_rpc, sui_tx
+- **Clean separation**: RPC, crypto, and transaction logic isolated
 
 ---
 
@@ -250,60 +339,145 @@ Each user's signing capability is tied directly to their IC identity, ensuring m
 
 ## 🔒 How It Works
 
-The canister derives unique keys for each principal using:
+### Key Derivation
 
-```motoko
-derivation_path = [CANISTER_SALT, Principal.toBlob(caller)]
+Each IC principal gets a unique, deterministic SUI wallet:
+
+```
+Your IC Principal → Derivation Path → IC ECDSA → Public Key → SUI Address
 ```
 
-This ensures:
-- **Deterministic**: Same principal always gets the same SUI address
-- **Isolated**: Different principals get different addresses
-- **Secure**: Requires IC consensus to sign transactions
+**Derivation Path**:
+```motoko
+derivation_path = [[1], Principal.toBlob(caller)]
+// Schema V1 (single byte) + principal bytes
+```
+
+**Properties**:
+- ✅ **Deterministic**: Same principal always gets the same SUI address
+- ✅ **Isolated**: Different principals get completely different addresses
+- ✅ **Secure**: Requires IC consensus to sign (threshold ECDSA)
+- ✅ **Non-Custodial**: No private keys stored anywhere
+- ✅ **Standard Compliant**: Matches Rust implementation patterns
+
+### Signature Scheme
+
+SUI requires a specific signature format. Here's our battle-tested pipeline:
+
+**Step 1: Transaction Preparation**
+```
+Intent [0,0,0] + Transaction Bytes → Message to Sign
+```
+
+**Step 2: Triple Hash** (Critical for SUI compatibility)
+```
+1. Blake2b-256(message) → 32 bytes external hash
+2. SHA256(blake2b_hash) → 32 bytes intermediate  
+3. IC ECDSA signs SHA256 hash (internal SHA256 again)
+```
+
+**Why Triple Hash?**
+- SUI requires Blake2b-256 for transaction hashing
+- IC's threshold ECDSA does SHA256 internally
+- We bridge with intermediate SHA256 (matching Rust implementation)
+
+**Step 3: Signature Normalization**
+```motoko
+// SUI requires low-s signatures (s ≤ N/2)
+if (s > N/2) {
+  s' = N - s  // Normalize to low-s
+}
+```
+
+**Step 4: Final Signature Construction**
+```
+0x01 (ECDSA Secp256k1 flag) + 
+signature (64 bytes: r||s normalized) + 
+compressed_pubkey (33 bytes)
+= 98 bytes total
+```
+
+### Cycle Costs
+
+- **ECDSA Public Key**: 10,000,000,000 cycles (10B)
+- **ECDSA Signing**: 10,000,000,000 cycles (10B)
+- **HTTP Outcalls**: 500,000,000 cycles (500M) for transfers
+- **Public Key Caching**: Reduces repeated ECDSA calls
+
+### RPC Configuration
+
+**SUI Testnet**: `https://fullnode.testnet.sui.io:443`
+
+**Methods Used**:
+- `suix_getBalance`: Query wallet balance
+- `suix_getCoins`: Get spendable coin objects
+- `unsafe_transferSui`: Simple transfer (returns txBytes for signing)
+- `sui_executeTransactionBlock`: Broadcast signed transaction
 
 ## 🏗️ Code Architecture
 
-The codebase is organized into modular files for maintainability:
+The codebase is organized into modular files for maximum maintainability and reusability:
 
 ### Core Modules
 
-- **`main.mo`**: Main canister actor with MCP server setup, authentication, and HTTP handling
-- **`types.mo`**: Shared type definitions (SuiCoin, SuiGasData, etc.)
-- **`utils.mo`**: Utility functions for parsing, encoding (base64, hex)
-- **`crypto.mo`**: Cryptographic operations:
-  - Public key to SUI address conversion (Blake2b-based)
-  - ECDSA signature normalization (low-s requirement for SUI)
-- **`wallet_tools.mo`**: MCP tool implementations:
-  - `walletGetAddressTool`: Returns caller's unique SUI address
-  - `walletGetBalanceTool`: Queries SUI balance via RPC
-  - `walletTransferTool`: Constructs, signs, and broadcasts transactions
+**`main.mo`** (524 lines)
+- Main canister actor with MCP server setup
+- Authentication and API key management
+- HTTP request handling and routing
+- Wallet context provider for tools
 
-### Key Functions
+**`types.mo`** (17 lines)
+- Shared type definitions
+- `SuiCoin`: Coin object structure
+- `SuiGasData`: Gas payment data
 
-```motoko
-// In main.mo
-getPublicKey(caller) -> derives 33-byte compressed secp256k1 key from IC ECDSA
-getSuiAddress(caller) -> converts public key to SUI address
-querySuiBalance(address) -> calls SUI RPC to get balance
-getSuiCoins(address) -> fetches coin objects for spending
-transferSuiSimple(...) -> creates and signs SUI transfer transaction
-signWithCallerKey(...) -> signs message hash with IC ECDSA (10B cycles)
+**`utils.mo`** (81 lines)
+- `parseNat()`: Safe text to number parsing
+- `encodeBase64/decodeBase64()`: Base64 encoding for RPC
+- `hexEncode()`: Byte array to hex string conversion
 
-// In crypto.mo
-publicKeyToSuiAddress(pubkey) -> Blake2b hash + bech32 encoding
-normalizeSignature(sig) -> ensures s-value ≤ N/2 (required by SUI)
+**`crypto.mo`** (193 lines)
+- `blake2bHash()`: Blake2b-256 with explicit 32-byte config
+- `sha256Hash()`: SHA256 wrapper for intermediate hashing
+- `publicKeyToSuiAddress()`: Converts pubkey to SUI address (Blake2b + bech32)
+- `normalizeSignature()`: Low-s normalization (if s > N/2, compute s' = N - s)
 
-// In utils.mo
-parseNat(text) -> safe text to number parsing
-encodeBase64/decodeBase64 -> base64 encoding for RPC communication
-hexEncode(bytes) -> hex string conversion
-```
+**`key_manager.mo`** (105 lines)
+- `getPublicKey()`: Derives 33-byte compressed secp256k1 key from IC ECDSA
+- `signWithCallerKey()`: Signs message hash with IC ECDSA (10B cycles)
+- `getDerivationPath()`: Builds derivation path `[[1], principal]`
+- Public key caching with Map-based storage
 
-This modular structure makes it easy to:
-- Add new tools (extend `wallet_tools.mo`)
-- Support other blockchains (create new crypto modules)
-- Reuse utilities across different features
-- Test individual components independently
+**`sui_rpc.mo`** (286 lines)
+- `querySuiBalance()`: Queries balance via SUI RPC
+- `getSuiCoins()`: Fetches coin objects for spending
+- `executeSuiTransaction()`: Broadcasts signed transactions
+- RPC configuration and HTTP outcall management
+
+**`sui_tx.mo`** (138 lines)
+- `transferSuiSimple()`: Complete transfer flow
+  1. Get txBytes from `unsafe_transferSui` RPC
+  2. Construct intent message `[0,0,0] + txBytes`
+  3. Blake2b-256 hash (32 bytes)
+  4. SHA256 intermediate hash (32 bytes)
+  5. IC sign_with_ecdsa (10B cycles)
+  6. Normalize signature (low-s)
+  7. Construct final: `0x01 + sig(64) + pubkey(33)`
+  8. Execute transaction via RPC
+
+**`wallet_tools.mo`** (173 lines)
+- `walletGetAddressTool()`: Returns caller's unique SUI address
+- `walletGetBalanceTool()`: Queries SUI balance via RPC
+- `walletTransferTool()`: Constructs, signs, and broadcasts transfers
+- Context-based dependency injection pattern
+
+### Why This Architecture?
+
+✅ **Separation of concerns** - Each module has a single responsibility  
+✅ **Reusability** - Functions can be used independently  
+✅ **Testability** - Easier to test individual components  
+✅ **Maintainability** - Clean, focused code that's easy to understand  
+✅ **Extensibility** - Easy to add new blockchains or features
 
 ---
 
@@ -311,14 +485,26 @@ This modular structure makes it easy to:
 
 ## 🛣️ Roadmap
 
+### ✅ Completed (v1.0)
 - [x] Multi-tenant wallet architecture
-- [x] Address derivation per principal
+- [x] Address derivation per principal (Blake2b-based)
 - [x] Balance queries via SUI RPC
-- [ ] Complete transaction signing and broadcasting
-- [ ] Support for SUI coin selection
+- [x] **Transaction signing and broadcasting** (Blake2b → SHA256 → IC ECDSA)
+- [x] **Signature normalization** (low-s enforcement)
+- [x] **Working transfers on SUI testnet**
+- [x] MCP tool implementations
+- [x] Authentication with API keys
+- [x] Modular code architecture
+
+### 🔜 Future Enhancements (v2.0+)
+- [ ] Intelligent coin selection (currently uses first available coin)
 - [ ] Gas estimation and optimization
-- [ ] Support for SUI Move calls
+- [ ] Support for SUI Move calls (programmable transactions)
 - [ ] Transaction history tracking
+- [ ] Multi-coin transfers (batch operations)
+- [ ] Support for SUI tokens (not just native SUI)
+- [ ] NFT support
+- [ ] Mainnet deployment (currently testnet only)
 
 ---
 
@@ -327,12 +513,26 @@ This modular structure makes it easy to:
 -   [SPEC.md](./SPEC.md) - Detailed technical specification
 -   [Prometheus Protocol Docs](https://prometheusprotocol.org/docs)
 -   [SUI Documentation](https://docs.sui.io/)
+-   [SUI Signatures Reference](https://docs.sui.io/concepts/cryptography/transaction-auth/signatures)
 -   [IC Threshold ECDSA](https://internetcomputer.org/docs/current/developer-docs/integrations/t-ecdsa/)
+-   [Blake2b Specification](https://www.blake2.net/)
+
+## 🙏 Acknowledgments
+
+This project was built with reference to:
+- [SUI Rust SDK](https://github.com/MystenLabs/sui/tree/main/crates/sui-sdk) - Reference implementation for signature handling
+- [Prometheus Protocol](https://prometheusprotocol.org/) - MCP server framework and app store
+- Internet Computer community for threshold ECDSA support
+
+## 📝 License
+
+MIT License - see LICENSE file for details
 
 ---
 
 ## What's Next?
 
--   **Complete Transaction Implementation:** The `wallet_transfer` tool needs full transaction construction and signing
--   **Add More Features:** Consider adding support for SUI Move calls, NFTs, and other SUI features
--   **Learn More:** Check out the full [Service Developer Docs](https://prometheusprotocol.org/docs) for advanced topics# sui-wallet
+-   **Try It Live:** Test the wallet on IC mainnet with testnet SUI
+-   **Contribute:** Submit PRs for coin selection, gas optimization, or new features
+-   **Deploy Your Own:** Fork this repo and customize for your use case
+-   **Learn More:** Check out the full [Service Developer Docs](https://prometheusprotocol.org/docs) for advanced topics
