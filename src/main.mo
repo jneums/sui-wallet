@@ -58,11 +58,11 @@ shared ({ caller = deployer }) persistent actor class McpServer(
   // Using a simple version byte like the Rust example for compatibility
   let CANISTER_SALT : Blob = Blob.fromArray([1 : Nat8]); // Schema V1
 
-  // SUI RPC endpoint (testnet)
-  let SUI_RPC_URL : Text = "https://fullnode.testnet.sui.io:443";
+  // SUI RPC endpoint (mainnet)
+  let SUI_RPC_URL : Text = "https://fullnode.mainnet.sui.io:443";
 
   // ECDSA key name for IC threshold signatures
-  let KEY_NAME : Text = "test_key_1"; // Use "key_1" for mainnet
+  let KEY_NAME : Text = "key_1"; // Use "key_1" for mainnet
 
   // State for certified HTTP assets (like /.well-known/...)
   var stable_http_assets : HttpAssets.StableEntries = [];
@@ -123,17 +123,13 @@ shared ({ caller = deployer }) persistent actor class McpServer(
   // This helps the Prometheus Protocol DAO understand ecosystem growth.
   // =================================================================================
 
-  transient let beaconContext : ?Beacon.BeaconContext = null;
+  // transient let beaconContext : ?Beacon.BeaconContext = null;
 
-  // --- UNCOMMENT THIS BLOCK TO ENABLE THE BEACON ---
-  /*
   let beaconCanisterId = Principal.fromText("m63pw-fqaaa-aaaai-q33pa-cai");
   transient let beaconContext : ?Beacon.BeaconContext = ?Beacon.init(
-      beaconCanisterId, // Public beacon canister ID
-      ?(15 * 60), // Send a beacon every 15 minutes
+    beaconCanisterId, // Public beacon canister ID
+    ?(15 * 60), // Send a beacon every 15 minutes
   );
-  */
-  // --- END OF BEACON BLOCK ---
 
   // --- Timers ---
   Cleanup.startCleanupTimer<system>(appContext);

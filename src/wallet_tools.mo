@@ -133,10 +133,8 @@ module {
     if (coins.size() == 0) {
       let errorMsg = "Insufficient funds: No coins available in wallet.\n\n" #
       "Your SUI wallet address is: " # senderAddress # "\n\n" #
-      "Please fund this EXACT address on SUI testnet.\n" #
-      "Faucet: https://discord.com/channels/916379725201563759/971488439931392130\n" #
-      "Or web faucet: https://faucet.testnet.sui.io/\n\n" #
-      "You can verify your balance at: https://suiscan.xyz/testnet/account/" # senderAddress;
+      "Please fund this EXACT address on SUI mainnet.\n" #
+      "You can verify your balance at: https://suiscan.xyz/mainnet/account/" # senderAddress;
       return cb(#ok({ content = [#text({ text = errorMsg })]; isError = true; structuredContent = null }));
     };
 

@@ -7,7 +7,7 @@ A **multi-tenant, non-custodial SUI wallet canister** that functions as an MCP s
 - **✅ Multi-Tenant Architecture**: Each IC principal automatically gets their own unique SUI wallet
 - **✅ Non-Custodial**: Uses IC's threshold ECDSA for decentralized key management
 - **✅ Deterministic Key Derivation**: Your SUI address is always derived from your IC identity
-- **✅ Fully Functional Transfers**: Successfully tested on SUI testnet
+- **✅ Fully Functional Transfers**: Production-ready and tested on SUI mainnet
 - **✅ Blake2b-256 Hashing**: Proper SUI signature scheme implementation
 - **✅ MCP Tools**: Three working tools (address, balance, transfer)
 - **✅ Secure by Design**: No private keys stored; all signing done via IC consensus
@@ -15,6 +15,8 @@ A **multi-tenant, non-custodial SUI wallet canister** that functions as an MCP s
 ## 🚀 Live Demo
 
 **Canister ID**: `jtr3i-2qaaa-aaaai-q34oq-cai` (IC Mainnet)
+
+**Status**: ✅ Production-ready and fully operational on SUI mainnet
 
 Try it live with the MCP Inspector or integrate it into your AI agent!
 
@@ -91,7 +93,7 @@ Your SUI wallet server is now live with three tools available.
 
 4.  **Try the Tools:**
     - Call `wallet_get_address` to get your unique SUI address
-    - Fund your address with testnet SUI from [SUI Testnet Faucet](https://faucet.testnet.sui.io/)
+    - Fund your address with SUI from an exchange or another wallet
     - Call `wallet_get_balance` to check your balance
 
 🎉 **Congratulations!** You have a working multi-tenant SUI wallet!
@@ -137,7 +139,7 @@ Retrieves your current SUI balance in MIST (1 SUI = 1,000,000,000 MIST).
 **Note**: 
 - Balance is returned as a string to handle large numbers
 - 1 SUI = 1,000,000,000 MIST
-- Queries SUI testnet RPC at `https://fullnode.testnet.sui.io:443`
+- Queries SUI mainnet RPC at `https://fullnode.mainnet.sui.io:443`
 
 **Example**:
 ```bash
@@ -254,7 +256,7 @@ derivation_path = [[1], Principal.toBlob(caller)]
 **Tested & Verified**:
 - ✅ Address derivation matches SUI standards
 - ✅ Signatures pass SUI network validation
-- ✅ Transfers execute successfully on testnet
+- ✅ **Transfers execute successfully on SUI mainnet**
 - ✅ Multi-tenant isolation working correctly
 - ✅ All three MCP tools fully functional
 
@@ -406,7 +408,7 @@ compressed_pubkey (33 bytes)
 
 ### RPC Configuration
 
-**SUI Testnet**: `https://fullnode.testnet.sui.io:443`
+**SUI Mainnet**: `https://fullnode.mainnet.sui.io:443`
 
 **Methods Used**:
 - `suix_getBalance`: Query wallet balance
@@ -491,7 +493,7 @@ The codebase is organized into modular files for maximum maintainability and reu
 - [x] Balance queries via SUI RPC
 - [x] **Transaction signing and broadcasting** (Blake2b → SHA256 → IC ECDSA)
 - [x] **Signature normalization** (low-s enforcement)
-- [x] **Working transfers on SUI testnet**
+- [x] **Working transfers on SUI mainnet**
 - [x] MCP tool implementations
 - [x] Authentication with API keys
 - [x] Modular code architecture
@@ -504,7 +506,6 @@ The codebase is organized into modular files for maximum maintainability and reu
 - [ ] Multi-coin transfers (batch operations)
 - [ ] Support for SUI tokens (not just native SUI)
 - [ ] NFT support
-- [ ] Mainnet deployment (currently testnet only)
 
 ---
 

@@ -1,0 +1,37 @@
+# Prometheus Application Manifest
+# This is the permanent, unique identifier for your application.
+namespace: io.github.jneums.sui-wallet
+
+# This section contains all data for a specific version. This entire package will be submitted for review and locked to the audit of this version.
+# deployment_type: 'global' (shared infrastructure, recommended) or 'provisioned' (dedicated resources)
+submission:
+  name: SUI Wallet for AI Agents
+  description: Multi-tenant, non-custodial SUI wallet on Internet Computer. Each principal gets their own deterministic SUI address via threshold ECDSA. Send & receive SUI with zero custody risk - all signing happens through IC consensus. Production-ready on SUI mainnet!
+  publisher: Jesse Neumann
+  category: Finance
+  deployment_type: global
+  repo_url: https://github.com/jneums/sui-wallet
+  mcp_path: /mcp
+  why_this_app: First truly non-custodial SUI wallet for AI agents. No private keys stored anywhere - your IC identity IS your SUI wallet. Perfect for autonomous agents that need to transact on SUI without trust assumptions. Fully tested and working on SUI mainnet.
+  key_features:
+    - Deterministic SUI address from IC Principal (Blake2b + threshold ECDSA)
+    - Fully functional transfers with proper signature scheme (Blake2b-256 → SHA256 → IC ECDSA)
+    - Multi-tenant isolation - each principal gets unique, secure wallet
+    - Zero custody risk - all signing via IC consensus
+    - Production-ready and tested on SUI mainnet
+  tags:
+    - blockchain
+    - wallet
+    - sui
+    - crypto
+    - finance
+    - defi
+    - non-custodial
+    - ecdsa
+  visuals:
+    icon_url: https://github.com/jneums/sui-wallet/releases/download/v1.0.0-assets/icon-sui-wallet.webp
+    banner_url: https://github.com/jneums/sui-wallet/releases/download/v1.0.0-assets/banner-sui-wallet.webp
+    gallery_images:
+      - https://github.com/jneums/sui-wallet/releases/download/v1.0.0-assets/banner-sui-wallet.webp
+  git_commit: ''
+  wasm_path: .dfx/local/canisters/my_mcp_server/my_mcp_server.wasm
