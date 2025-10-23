@@ -33,5 +33,5 @@ submission:
     banner_url: https://github.com/jneums/sui-wallet/releases/download/v1.0.0-assets/banner-sui-wallet.webp
     gallery_images:
       - https://github.com/jneums/sui-wallet/releases/download/v1.0.0-assets/banner-sui-wallet.webp
-  git_commit: 'ddddfc485acb2bd53acf8224484e01c2e5c356f6'
+  git_commit: 'a9aa9b995c958fca4ac3e4d097d41347383e2e70'
   wasm_path: .dfx/local/canisters/my_mcp_server/my_mcp_server.wasm
