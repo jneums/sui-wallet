@@ -3,13 +3,14 @@ import Blob "mo:base/Blob";
 import Debug "mo:base/Debug";
 import Error "mo:base/Error";
 import Nat "mo:base/Nat";
-import Nat64 "mo:base/Nat64";
 import Result "mo:base/Result";
 import Text "mo:base/Text";
 import IC "mo:ic";
 import Json "mo:json";
 import Types "./types";
 import Utils "./utils";
+
+import { ic } "mo:ic";
 
 module {
   public type RpcConfig = {
@@ -25,29 +26,13 @@ module {
     try {
       let request_body = "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"suix_getBalance\",\"params\":[\"" # address # "\"]}";
 
-      let ic_management = actor ("aaaaa-aa") : actor {
-        http_request : ({
-          url : Text;
-          max_response_bytes : ?Nat64;
-          headers : [{ name : Text; value : Text }];
-          body : ?Blob;
-          method : { #get; #head; #post };
-          transform : ?{
-            function : shared query ({
-              response : IC.HttpRequestResult;
-              context : Blob;
-            }) -> async IC.HttpRequestResult;
-            context : Blob;
-          };
-        }) -> async IC.HttpRequestResult;
-      };
-
-      let response = await (with cycles = 300_000_000) ic_management.http_request({
+      let response = await (with cycles = 300_000_000) ic.http_request({
         url = config.rpcUrl;
         max_response_bytes = ?10000;
         headers = [{ name = "Content-Type"; value = "application/json" }];
         body = ?Text.encodeUtf8(request_body);
         method = #post;
+        is_replicated = ?false;
         transform = ?{
           function = config.transformFunc;
           context = Blob.fromArray([]);
@@ -84,29 +69,13 @@ module {
       Debug.print("Getting coins for address: " # address);
       let request_body = "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"suix_getCoins\",\"params\":[\"" # address # "\",null,null,null]}";
 
-      let ic_management = actor ("aaaaa-aa") : actor {
-        http_request : ({
-          url : Text;
-          max_response_bytes : ?Nat64;
-          headers : [{ name : Text; value : Text }];
-          body : ?Blob;
-          method : { #get; #head; #post };
-          transform : ?{
-            function : shared query ({
-              response : IC.HttpRequestResult;
-              context : Blob;
-            }) -> async IC.HttpRequestResult;
-            context : Blob;
-          };
-        }) -> async IC.HttpRequestResult;
-      };
-
-      let response = await (with cycles = 300_000_000) ic_management.http_request({
+      let response = await (with cycles = 300_000_000) ic.http_request({
         url = config.rpcUrl;
         max_response_bytes = ?20000;
         headers = [{ name = "Content-Type"; value = "application/json" }];
         body = ?Text.encodeUtf8(request_body);
         method = #post;
+        is_replicated = ?false;
         transform = ?{
           function = config.transformFunc;
           context = Blob.fromArray([]);
@@ -221,29 +190,13 @@ module {
     "\"params\":[\"" # txBytesBase64 # "\",[\"" # signatureBase64 # "\"],null,null]}";
 
     try {
-      let ic_management = actor ("aaaaa-aa") : actor {
-        http_request : ({
-          url : Text;
-          max_response_bytes : ?Nat64;
-          headers : [{ name : Text; value : Text }];
-          body : ?Blob;
-          method : { #get; #head; #post };
-          transform : ?{
-            function : shared query ({
-              response : IC.HttpRequestResult;
-              context : Blob;
-            }) -> async IC.HttpRequestResult;
-            context : Blob;
-          };
-        }) -> async IC.HttpRequestResult;
-      };
-
-      let response = await (with cycles = 500_000_000) ic_management.http_request({
+      let response = await (with cycles = 500_000_000) ic.http_request({
         url = config.rpcUrl;
         max_response_bytes = ?30000;
         headers = [{ name = "Content-Type"; value = "application/json" }];
         body = ?Text.encodeUtf8(request_body);
         method = #post;
+        is_replicated = ?false;
         transform = ?{
           function = config.transformFunc;
           context = Blob.fromArray([]);

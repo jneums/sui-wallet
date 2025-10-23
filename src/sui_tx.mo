@@ -4,14 +4,14 @@ import Debug "mo:base/Debug";
 import Error "mo:base/Error";
 import Nat "mo:base/Nat";
 import Nat64 "mo:base/Nat64";
-import Principal "mo:base/Principal";
 import Result "mo:base/Result";
 import Text "mo:base/Text";
-import IC "mo:ic";
 import Json "mo:json";
 import Crypto "./crypto";
 import SuiRpc "./sui_rpc";
 import Utils "./utils";
+
+import { ic } "mo:ic";
 
 module {
   /// Transfer SUI using the unsafe_transferSui RPC method
@@ -32,29 +32,13 @@ module {
 
       Debug.print("Transfer request: " # request_body);
 
-      let ic_management = actor ("aaaaa-aa") : actor {
-        http_request : ({
-          url : Text;
-          max_response_bytes : ?Nat64;
-          headers : [{ name : Text; value : Text }];
-          body : ?Blob;
-          method : { #get; #head; #post };
-          transform : ?{
-            function : shared query ({
-              response : IC.HttpRequestResult;
-              context : Blob;
-            }) -> async IC.HttpRequestResult;
-            context : Blob;
-          };
-        }) -> async IC.HttpRequestResult;
-      };
-
-      let response = await (with cycles = 300_000_000) ic_management.http_request({
+      let response = await (with cycles = 300_000_000) ic.http_request({
         url = rpcConfig.rpcUrl;
         max_response_bytes = ?20000;
         headers = [{ name = "Content-Type"; value = "application/json" }];
         body = ?Text.encodeUtf8(request_body);
         method = #post;
+        is_replicated = ?false;
         transform = ?{
           function = rpcConfig.transformFunc;
           context = Blob.fromArray([]);

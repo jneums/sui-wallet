@@ -8,6 +8,8 @@ import Result "mo:base/Result";
 import Map "mo:map/Map";
 import Crypto "./crypto";
 
+import { ic } "mo:ic";
+
 module {
   public type KeyCache = Map.Map<Principal, Blob>;
 
@@ -42,15 +44,7 @@ module {
     Debug.print("Derivation path length: " # Nat.toText(derivation_path.size()));
 
     try {
-      let ic_management = actor ("aaaaa-aa") : actor {
-        ecdsa_public_key : ({
-          canister_id : ?Principal;
-          derivation_path : [Blob];
-          key_id : { curve : { #secp256k1 }; name : Text };
-        }) -> async { public_key : Blob; chain_code : Blob };
-      };
-
-      let response = await (with cycles = 10_000_000_000) ic_management.ecdsa_public_key({
+      let response = await (with cycles = 10_000_000_000) ic.ecdsa_public_key({
         canister_id = null;
         derivation_path = derivation_path;
         key_id = { curve = #secp256k1; name = config.keyName };
@@ -77,15 +71,7 @@ module {
     let derivation_path = getDerivationPath(config, caller);
 
     try {
-      let ic_management = actor ("aaaaa-aa") : actor {
-        sign_with_ecdsa : ({
-          message_hash : Blob;
-          derivation_path : [Blob];
-          key_id : { curve : { #secp256k1 }; name : Text };
-        }) -> async { signature : Blob };
-      };
-
-      let response = await (with cycles = 10_000_000_000) ic_management.sign_with_ecdsa({
+      let response = await (with cycles = 10_000_000_000) ic.sign_with_ecdsa({
         message_hash = messageHash;
         derivation_path = derivation_path;
         key_id = { curve = #secp256k1; name = config.keyName };

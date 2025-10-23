@@ -12,6 +12,8 @@ import Blake2b "mo:blake2b";
 import Sha256 "mo:sha2/Sha256";
 import Utils "./utils";
 
+import { ic } "mo:ic";
+
 module {
   public type PublicKey = Blob;
   public type Signature = [Nat8];
