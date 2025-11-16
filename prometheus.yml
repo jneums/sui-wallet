@@ -8,7 +8,7 @@ submission:
   name: SUI Wallet
   description: Multi-tenant, non-custodial SUI wallet on Internet Computer. Each principal gets their own deterministic SUI address via threshold ECDSA. Send & receive SUI with zero custody risk - all signing happens through IC consensus. Production-ready on SUI mainnet!
   publisher: Atlas Labs
-  category: Finance
+  category: Wallets
   deployment_type: global
   repo_url: https://github.com/jneums/sui-wallet
   mcp_path: /mcp
